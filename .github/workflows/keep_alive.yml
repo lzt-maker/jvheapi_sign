@@ -1,0 +1,38 @@
+name: 保持仓库活跃
+
+on:
+  schedule:
+    # UTC 0点 = 北京时间08:00，每月1号执行
+    - cron: '33 16 1 * *'
+  workflow_dispatch: # 支持手动触发
+
+permissions:
+  contents: write
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    env:
+      TZ: Asia/Shanghai
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 完整拉取，避免推送异常
+
+      - name: 获取当前时间
+        id: date
+        run: echo "NOW=$(date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
+
+      - name: 更新活动记录文件
+        run: |
+          mkdir -p .github
+          echo "上次自动活跃提交: ${{ steps.date.outputs.NOW }}" > .github/last_activity.md
+
+      - name: 提交并推送
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add .github/last_activity.md
+          git commit -m "chore: 自动保持仓库活跃 ${{ steps.date.outputs.NOW }}" || echo "文件无变动，跳过提交"
+          git push origin HEAD:${{ github.ref }}
