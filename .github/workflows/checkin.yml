@@ -28,4 +28,4 @@ jobs:
         env:
           API_USERNAME: ${{ secrets.API_USERNAME }}
           API_PASSWORD: ${{ secrets.API_PASSWORD }}
-        run: python main.py
+        run: python checkin_jhapi.py
